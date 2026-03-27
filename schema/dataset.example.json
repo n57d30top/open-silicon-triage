@@ -1,0 +1,21 @@
+{
+  "schemaVersion": "open-silicon-triage.corpus.v1",
+  "recordId": "ost-example-001",
+  "project": "community",
+  "variant": "riscv-mini-core-1x1",
+  "pdk": "sky130A",
+  "tool": "OpenLane 2.1.0",
+  "metrics": {
+    "hpwlUm": 10937.14,
+    "averageSinkWireLengthUm": 312.92,
+    "setupWnsNs": -7.9335,
+    "setupViolations": 459,
+    "holdViolations": 0,
+    "antennaViolations": 0,
+    "maxCapViolations": 0,
+    "maxSlewViolations": 0
+  },
+  "outcome": "promoted_winner",
+  "observedAt": "2026-03-22T14:29:41Z",
+  "contributor": "anonymous"
+}
