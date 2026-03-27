@@ -112,23 +112,34 @@ The predictor is only as good as the data behind it. Right now it knows 76 runs 
 
 Think of it like **Waze, but for chip design** — the more people share their run data, the better the routing predictions get for everyone. At 1,000 records it'll be scary good. At 10,000 it could become the standard pre-check for every OpenLane user worldwide.
 
-### Contributing a run = one command
+### How to contribute a run
 
-After your OpenLane run finishes, just point the submit script at the run directory:
-
+**Step 1:** Clone this repo (if you haven't already):
 ```bash
-python cli/submit.py ./runs/RUN_2026.03.27 --variant "picorv32"
+git clone https://github.com/n57d30top/open-silicon-triage.git
 ```
 
+**Step 2:** After your OpenLane run finishes, find the run folder. It's usually something like `./runs/RUN_2026.03.27_15-30-00` and contains subfolders like `reports/` and `logs/`.
+
+**Step 3:** Run this one command — replace the path with your actual run folder, and give your design a name:
+```bash
+python open-silicon-triage/cli/submit.py ./runs/RUN_2026.03.27 --variant "my-design-name"
+```
+
+| Part | What it means |
+|------|---------------|
+| `python` | Run a Python script |
+| `open-silicon-triage/cli/submit.py` | The submit script from the cloned repo |
+| `./runs/RUN_2026.03.27` | **Your** OpenLane run output folder |
+| `--variant "my-design-name"` | A name for your design (e.g. "picorv32", "aes-128") |
+
 **That's it.** The script automatically:
-1. 🔍 Scans your run directory for reports and logs
-2. 📊 Extracts all 6 metrics (HPWL, WNS, violations, etc.)
-3. 🔒 Strips all local paths — your files stay private
-4. 📤 Creates a Pull Request on GitHub via `gh` CLI
+1. 🔍 Scans your run folder for OpenLane reports and logs
+2. 📊 Extracts the key metrics (wire length, timing, violations)
+3. 🔒 Strips all local file paths — **your design files stay completely private**. Only anonymous performance numbers are shared.
+4. 📤 Creates a Pull Request on GitHub (requires [GitHub CLI](https://cli.github.com))
 
-No manual typing. No copy-paste. No errors. Just one command.
-
-> Don't have `gh` installed? The script will print the anonymized record so you can paste it manually.
+> **No GitHub CLI?** No problem — the script will print the data as JSON so you can submit it manually.
 
 ### What we especially need
 
