@@ -42,8 +42,8 @@ def load_records(args):
     for record in records:
         if record.get("datasetSplit") == "eval":
             continue
-        features = record.get("features") or record.get("featureVector") or {}
-        label = record.get("label") or record.get("classification")
+        features = record.get("metrics") or record.get("features") or record.get("featureVector") or {}
+        label = record.get("outcome") or record.get("label") or record.get("classification")
         if not isinstance(features, dict) or not label:
             continue
         normalized.append({"features": features, "label": str(label)})

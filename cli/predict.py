@@ -27,8 +27,8 @@ def main():
 
     normalized = []
     for record in records:
-        features = record.get("features") or record.get("featureVector") or {}
-        if not isinstance(features, dict):
+        features = record.get("metrics") or record.get("features") or record.get("featureVector") or {}
+        if not isinstance(features, dict) or not features:
             continue
         normalized.append(features)
     if not normalized:

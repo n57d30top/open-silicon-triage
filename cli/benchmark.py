@@ -172,6 +172,7 @@ def main():
     parser.add_argument("--run-dir", help="Path to your OpenLane run directory")
     parser.add_argument("--metrics", help="Manual metrics as JSON string")
     parser.add_argument("--corpus", default="corpus/seed-corpus.json", help="Path to corpus (default: corpus/seed-corpus.json)")
+    parser.add_argument("--variant", help="Filter comparisons to a specific design variant (e.g. 'npu-array-v1')")
     args = parser.parse_args()
 
     if not args.run_dir and not args.metrics:
@@ -187,6 +188,16 @@ def main():
         sys.exit(1)
 
     corpus = load_corpus(corpus_path)
+    
+    context_msg = f"Comparing against {len(corpus)} global community runs"
+    if args.variant:
+        subset = [r for r in corpus if r.get("variant") == args.variant]
+        if len(subset) >= 5:
+            corpus = subset
+            context_msg = f"Comparing against {len(corpus)} similar runs (Variant: {args.variant})"
+        else:
+            context_msg += f"\n  (Note: Not enough data for variant '{args.variant}', need >= 5)"
+
     stats = compute_corpus_stats(corpus)
 
     # Get user metrics
@@ -202,7 +213,7 @@ def main():
     # Display
     print("=" * 70)
     print("  Open Silicon Triage — Benchmark Report")
-    print(f"  Comparing against {len(corpus)} community runs")
+    print(f"  {context_msg}")
     print("=" * 70)
 
     outcomes = stats.get("_outcomes", {})
