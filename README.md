@@ -106,16 +106,40 @@ Every record in the corpus follows a simple JSON schema. See [`schema/dataset.sc
 - `holdViolations` — Number of hold timing violations
 - `antennaViolations` — Number of antenna rule violations
 
-## Contributing
+## 📡 Community-Driven — This Is Where You Come In
 
-We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
+The predictor is only as good as the data behind it. Right now it knows 76 runs from one architecture family. **But it's designed to learn from all of you.**
 
-The easiest way to contribute:
-1. Run your design through OpenLane
-2. Use `cli/ingest.py` to convert results
-3. Submit a Pull Request adding your record to `corpus/`
+Think of it like **Waze, but for chip design** — the more people share their run data, the better the routing predictions get for everyone. At 1,000 records it'll be scary good. At 10,000 it could become the standard pre-check for every OpenLane user worldwide.
 
-Every contribution makes the predictor more accurate for everyone.
+### Contributing a run takes 30 seconds
+
+```bash
+# Directly from your OpenLane run directory:
+python cli/ingest.py --openlane-dir ./runs/RUN_2026.03.27 \
+  --variant "my-riscv-core" --outcome negative_evidence \
+  --out corpus/my-run.json
+
+# Or manually if you just have the numbers:
+python cli/ingest.py \
+  --metrics '{"hpwl": 12345, "sink": 400, "wns": -5.0, "setup": 200, "hold": 0, "antenna": 3}' \
+  --variant "my-crypto-block" --outcome negative_evidence \
+  --out corpus/my-run.json
+```
+
+Then just open a PR adding your JSON file to `corpus/`. The ingest tool **automatically strips all local paths** — your IP and file structure stay private. Only the raw physical metrics go into the database.
+
+### What we especially need
+
+- 🔲 **RISC-V cores** (any size — from picorv32 to full CVA6)
+- 🔐 **Crypto/AES blocks**
+- 📡 **DSP designs**
+- 🏭 **Runs on gf180 or IHP PDKs** (we're sky130-only right now)
+- ❌ **Failed runs** — these are just as valuable as successes!
+
+Every single run — pass or fail — makes the predictor smarter for the entire community.
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for full details.
 
 ## License
 
