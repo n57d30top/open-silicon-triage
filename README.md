@@ -22,7 +22,7 @@ Open Silicon Triage collects anonymized run metrics (HPWL, sink wire length, tim
 ### 1. Install
 
 ```bash
-git clone https://github.com/n57d30/open-silicon-triage.git
+git clone https://github.com/n57d30top/open-silicon-triage.git
 cd open-silicon-triage
 pip install -r cli/requirements.txt
 ```
