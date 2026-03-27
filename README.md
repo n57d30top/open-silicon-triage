@@ -83,6 +83,48 @@ python cli/ingest.py \
 - **review** — Uncertain. Worth a closer look before committing resources.
 - **run** — Looks promising. Run the full flow.
 
+## 🛠️ Use It For Your Own Designs
+
+Want to use the predictor to check your own OpenLane runs? Here's how:
+
+### Step 1: Train a model on the community corpus
+
+This takes a few seconds and creates a trained model file:
+
+```bash
+python cli/train.py --features corpus/seed-corpus.json --out-model my-model.joblib --out-summary train-results.json
+```
+
+> **What this does:** Reads all 76+ community run records and trains an XGBoost model that learns which metric patterns lead to success or failure.
+
+### Step 2: Check your design
+
+After an OpenLane run, use `ingest.py` to extract your metrics, then `predict.py` to get a verdict:
+
+```bash
+# Extract metrics from your OpenLane run folder:
+python cli/ingest.py --openlane-dir ./runs/RUN_2026.03.27 --variant "my-design" --out my-run.json
+
+# Ask the predictor:
+python cli/predict.py --model my-model.joblib --features my-run.json --out-summary verdict.json
+```
+
+The output will tell you for each design:
+- **`reject`** → Your metrics look like those of designs that failed. Consider changing your approach before running again.
+- **`review`** → The model isn't sure. Check the weak spots manually.
+- **`run`** → Your metrics look like those of designs that succeeded. Go for the full run.
+
+### Step 3 (optional): Retrain as the corpus grows
+
+As more people contribute runs, download the latest corpus and retrain:
+
+```bash
+git pull
+python cli/train.py --features corpus/seed-corpus.json --out-model my-model.joblib --out-summary train-results.json
+```
+
+More data = better predictions. It's that simple.
+
 ## Corpus Statistics (Seed)
 
 | Metric | Value |
