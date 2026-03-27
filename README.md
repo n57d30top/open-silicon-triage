@@ -112,32 +112,23 @@ The predictor is only as good as the data behind it. Right now it knows 76 runs 
 
 Think of it like **Waze, but for chip design** — the more people share their run data, the better the routing predictions get for everyone. At 1,000 records it'll be scary good. At 10,000 it could become the standard pre-check for every OpenLane user worldwide.
 
-### Option 1: Submit via GitHub (Zero Setup — just fill in a form)
+### Contributing a run = one command
 
-**No install, no clone, no terminal needed.**
-
-1. Go to [**Submit a Run →**](../../issues/new?template=submit_run.yml)
-2. Fill in your numbers (HPWL, WNS, violations, etc.)
-3. Hit submit
-
-That's it. A GitHub Action will automatically convert your submission into a corpus record, open a PR, and notify you when it's merged. ✅
-
-### Option 2: CLI (Advanced)
+After your OpenLane run finishes, just point the submit script at the run directory:
 
 ```bash
-# Directly from your OpenLane run directory:
-python cli/ingest.py --openlane-dir ./runs/RUN_2026.03.27 \
-  --variant "my-riscv-core" --outcome negative_evidence \
-  --out corpus/my-run.json
-
-# Or manually if you just have the numbers:
-python cli/ingest.py \
-  --metrics '{"hpwl": 12345, "sink": 400, "wns": -5.0, "setup": 200, "hold": 0, "antenna": 3}' \
-  --variant "my-crypto-block" --outcome negative_evidence \
-  --out corpus/my-run.json
+python cli/submit.py ./runs/RUN_2026.03.27 --variant "picorv32"
 ```
 
-Then open a PR adding your JSON file to `corpus/`. The ingest tool **automatically strips all local paths** — your IP stays private.
+**That's it.** The script automatically:
+1. 🔍 Scans your run directory for reports and logs
+2. 📊 Extracts all 6 metrics (HPWL, WNS, violations, etc.)
+3. 🔒 Strips all local paths — your files stay private
+4. 📤 Creates a Pull Request on GitHub via `gh` CLI
+
+No manual typing. No copy-paste. No errors. Just one command.
+
+> Don't have `gh` installed? The script will print the anonymized record so you can paste it manually.
 
 ### What we especially need
 
