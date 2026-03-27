@@ -1,25 +1,35 @@
 # Open Silicon Triage
 
-**The first open-source, community-driven ML predictor for chip design outcomes.**
+**The open-source toolkit for smarter OpenLane runs — check before, during, and after.**
 
-> Before you burn 30 minutes on an OpenLane run, ask the model:  
-> *"Will this design work?"*
+> Stop wasting 30 minutes on runs that were doomed from the start.
 
 [![License: Dual](https://img.shields.io/badge/License-Dual%20(Academic%20Free%20%2F%20Commercial%20Licensed)-blue)](#license)
 
 ## What is this?
 
-Open Silicon Triage is a lightweight ML tool that predicts whether a chip layout will pass physical verification (timing, antenna, hold) **before** you run the full EDA flow. It learns from a growing corpus of real OpenLane/OpenROAD run results contributed by the community.
+Open Silicon Triage gives you three checkpoints around every OpenLane run:
+
+```
+BEFORE your run          DURING your run           AFTER your run
+┌──────────────┐         ┌───────────────┐         ┌──────────────────┐
+│ Config Check │         │ Early Abort   │         │ Benchmark        │
+│              │         │               │         │                  │
+│ "80% util +  │         │ "WNS is -18ns │         │ "Your HPWL is    │
+│  10ns clock? │         │  after place— │         │  better than 75% │
+│  Don't even  │         │  abort now,   │         │  of community    │
+│  start."     │         │  save 25 min" │         │  runs."          │
+└──────────────┘         └───────────────┘         └──────────────────┘
+     0 min                    5 min                     30 min
+```
 
 ### The Problem
-Every day, hundreds of students and engineers run OpenLane to synthesize chip designs. Most runs fail. The knowledge from those failures is lost — nobody else learns from them.
+Hundreds of engineers run OpenLane daily. Most runs fail. Nobody shares what went wrong, so everyone repeats the same mistakes.
 
 ### The Solution
-Open Silicon Triage collects anonymized run metrics (HPWL, sink wire length, timing slack, violations) into an open database. An XGBoost model trained on this data predicts outcomes for new designs with **92%+ accuracy** on the seed corpus.
+Three tools that catch problems at every stage, backed by a growing community database of real run results.
 
 ## Quick Start
-
-### 1. Install
 
 ```bash
 git clone https://github.com/n57d30top/open-silicon-triage.git
@@ -27,36 +37,53 @@ cd open-silicon-triage
 pip install -r cli/requirements.txt
 ```
 
-### 2. Train (smoke test — no data needed)
+### 1. Before your run — Check your config
+
+Point it at your OpenLane config file. It warns you about risky parameter combinations:
 
 ```bash
-python cli/train.py --smoke --out-model tmp/model.joblib --out-summary tmp/train.json
+python cli/analyze-config.py --config ./openlane/config.json
+
+# Or specify parameters directly:
+python cli/analyze-config.py --clock-period 10 --utilization 0.70 --pdk sky130A
 ```
 
-### 3. Evaluate
+> *"🔴 HIGH RISK: Utilization 70% exceeds the typical max of 65% for sky130A."*
+> *"🔴 HIGH RISK: High utilization + aggressive clock is the #1 cause of failed runs."*
+
+### 2. During your run — Early abort check
+
+After placement finishes (~5 min), check if it's worth continuing:
 
 ```bash
-python cli/eval.py --smoke --model tmp/model.joblib --out-summary tmp/eval.json
+python cli/early-check.py --run-dir ./runs/RUN_2026.03.27
 ```
 
-### 4. Predict
+> *"🔴 ABORT: Setup WNS is -18.4 ns — too negative to recover during routing. Save 25 minutes."*
+
+### 3. After your run — Benchmark against the community
+
+See how your results compare to the community corpus:
 
 ```bash
-python cli/predict.py --model tmp/model.joblib --features corpus/seed-corpus.json --out-summary tmp/predict.json
+python cli/benchmark.py --run-dir ./runs/RUN_2026.03.27
+
+# Or with manual numbers:
+python cli/benchmark.py --metrics '{"hpwl": 10937, "wns": -7.93, "setup": 459, "hold": 0, "antenna": 0}'
 ```
 
-### 5. Contribute your own runs
+> *"✅ EXCELLENT: Your HPWL is better than 75% of community runs."*
+> *"🔴 POOR: Setup violations are in the bottom quartile."*
+
+### 4. (Bonus) ML Predictor
+
+Train and run the XGBoost-based triage predictor on the corpus:
 
 ```bash
-# From an OpenLane run directory:
-python cli/ingest.py --openlane-dir ./runs/RUN_2026.03.27 --out corpus/my-run.json
+python cli/train.py --features corpus/seed-corpus.json --out-model my-model.joblib --out-summary results.json
+python cli/predict.py --model my-model.joblib --features my-run.json --out-summary verdict.json
+```
 
-# Or manually:
-python cli/ingest.py \
-  --metrics '{"hpwl": 10937, "sink": 312, "wns": -7.93, "setup": 459, "hold": 0, "antenna": 0}' \
-  --variant "my-riscv-core" \
-  --outcome promoted_winner \
-  --out corpus/my-run.json
 ```
 
 ## How it works
