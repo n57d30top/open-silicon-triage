@@ -112,7 +112,17 @@ The predictor is only as good as the data behind it. Right now it knows 76 runs 
 
 Think of it like **Waze, but for chip design** — the more people share their run data, the better the routing predictions get for everyone. At 1,000 records it'll be scary good. At 10,000 it could become the standard pre-check for every OpenLane user worldwide.
 
-### Contributing a run takes 30 seconds
+### Option 1: Submit via GitHub (Zero Setup — just fill in a form)
+
+**No install, no clone, no terminal needed.**
+
+1. Go to [**Submit a Run →**](../../issues/new?template=submit_run.yml)
+2. Fill in your numbers (HPWL, WNS, violations, etc.)
+3. Hit submit
+
+That's it. A GitHub Action will automatically convert your submission into a corpus record, open a PR, and notify you when it's merged. ✅
+
+### Option 2: CLI (Advanced)
 
 ```bash
 # Directly from your OpenLane run directory:
@@ -127,7 +137,7 @@ python cli/ingest.py \
   --out corpus/my-run.json
 ```
 
-Then just open a PR adding your JSON file to `corpus/`. The ingest tool **automatically strips all local paths** — your IP and file structure stay private. Only the raw physical metrics go into the database.
+Then open a PR adding your JSON file to `corpus/`. The ingest tool **automatically strips all local paths** — your IP stays private.
 
 ### What we especially need
 

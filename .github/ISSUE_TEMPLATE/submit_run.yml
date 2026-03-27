@@ -1,0 +1,112 @@
+name: "📊 Submit a Run"
+description: "Share your OpenLane/OpenROAD run results to improve the predictor for everyone"
+title: "[Run] "
+labels: ["community-run"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Share your run results
+        Just fill in the numbers from your OpenLane run. No need to install anything — we'll automatically add your data to the corpus.
+        
+        **Your design files stay private.** Only the performance numbers below go into the open database.
+
+  - type: input
+    id: variant
+    attributes:
+      label: "Design name"
+      description: "A short name for your design (e.g. 'picorv32', 'aes-128', 'my-dsp-block')"
+      placeholder: "picorv32"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: pdk
+    attributes:
+      label: "PDK"
+      options:
+        - sky130A
+        - sky130B
+        - gf180mcuD
+        - ihp-sg13g2
+        - other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: tool
+    attributes:
+      label: "EDA Tool"
+      options:
+        - OpenLane 2.x
+        - OpenLane 1.x
+        - OpenROAD (standalone)
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: hpwl
+    attributes:
+      label: "HPWL (µm)"
+      description: "Half-Perimeter Wire Length — find it in your final summary report"
+      placeholder: "10937.14"
+    validations:
+      required: true
+
+  - type: input
+    id: sink
+    attributes:
+      label: "Average Sink Wire Length (µm)"
+      description: "Average capacitive load wire length"
+      placeholder: "312.92"
+    validations:
+      required: true
+
+  - type: input
+    id: wns
+    attributes:
+      label: "Setup WNS (ns)"
+      description: "Worst Negative Slack — negative means violation"
+      placeholder: "-7.93"
+    validations:
+      required: true
+
+  - type: input
+    id: setup_violations
+    attributes:
+      label: "Setup Violations"
+      description: "Number of setup timing violations"
+      placeholder: "459"
+    validations:
+      required: true
+
+  - type: input
+    id: hold_violations
+    attributes:
+      label: "Hold Violations"
+      description: "Number of hold timing violations"
+      placeholder: "0"
+    validations:
+      required: true
+
+  - type: input
+    id: antenna_violations
+    attributes:
+      label: "Antenna Violations"
+      description: "Number of antenna rule violations"
+      placeholder: "0"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: outcome
+    attributes:
+      label: "Outcome"
+      description: "How did the run go?"
+      options:
+        - "negative_evidence — Failed or no improvement"
+        - "strategic_progress — Some improvement but not promoted"
+        - "promoted_winner — Passed all checks, new baseline"
+    validations:
+      required: true

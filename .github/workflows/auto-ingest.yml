@@ -1,0 +1,124 @@
+name: Auto-Ingest Community Run
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  ingest-run:
+    if: contains(github.event.issue.labels.*.name, 'community-run')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Parse issue and create corpus record
+        env:
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_AUTHOR: ${{ github.event.issue.user.login }}
+        run: |
+          python3 << 'SCRIPT'
+          import hashlib, json, os, re
+          from datetime import datetime, timezone
+
+          body = os.environ["ISSUE_BODY"]
+          issue_num = os.environ["ISSUE_NUMBER"]
+          author = os.environ["ISSUE_AUTHOR"]
+
+          def extract(label):
+              pattern = rf"### {re.escape(label)}\s*\n\s*\n?\s*(.+)"
+              match = re.search(pattern, body)
+              return match.group(1).strip() if match else ""
+
+          variant = extract("Design name") or "unknown"
+          pdk = extract("PDK") or "sky130A"
+          tool = extract("EDA Tool") or "OpenLane 2.x"
+          hpwl = float(extract("HPWL (µm)") or "0")
+          sink = float(extract("Average Sink Wire Length (µm)") or "0")
+          wns = float(extract("Setup WNS (ns)") or "0")
+          setup = int(extract("Setup Violations") or "0")
+          hold = int(extract("Hold Violations") or "0")
+          antenna = int(extract("Antenna Violations") or "0")
+          
+          outcome_raw = extract("Outcome") or "negative_evidence"
+          outcome = outcome_raw.split(" — ")[0].strip() if " — " in outcome_raw else outcome_raw
+
+          record_id = hashlib.sha256(f"issue-{issue_num}-{variant}".encode()).hexdigest()[:12]
+          
+          record = {
+              "schemaVersion": "open-silicon-triage.corpus.v1",
+              "recordId": f"ost-{record_id}",
+              "project": "community",
+              "variant": variant,
+              "pdk": pdk,
+              "tool": tool,
+              "metrics": {
+                  "hpwlUm": hpwl,
+                  "averageSinkWireLengthUm": sink,
+                  "setupWnsNs": wns,
+                  "setupViolations": setup,
+                  "holdViolations": hold,
+                  "antennaViolations": antenna,
+              },
+              "outcome": outcome,
+              "observedAt": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+              "contributor": author,
+          }
+
+          filename = f"corpus/community-{issue_num}-{variant.lower().replace(' ', '-')[:30]}.json"
+          os.makedirs("corpus", exist_ok=True)
+          with open(filename, "w") as f:
+              json.dump(record, f, indent=2)
+              f.write("\n")
+          
+          with open(os.environ["GITHUB_ENV"], "a") as env:
+              env.write(f"CORPUS_FILE={filename}\n")
+              env.write(f"VARIANT={variant}\n")
+          
+          print(f"✅ Created {filename}")
+          print(json.dumps(record, indent=2))
+          SCRIPT
+
+      - name: Create Pull Request
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "open-silicon-triage-bot"
+          git config user.email "bot@open-silicon-triage.dev"
+          
+          BRANCH="community-run-${{ github.event.issue.number }}"
+          git checkout -b "$BRANCH"
+          git add corpus/
+          git commit -m "feat(corpus): add community run from #${{ github.event.issue.number }} (${{ env.VARIANT }})"
+          git push origin "$BRANCH"
+          
+          gh pr create \
+            --title "Add community run: ${{ env.VARIANT }} (#${{ github.event.issue.number }})" \
+            --body "Auto-generated from issue #${{ github.event.issue.number }}.
+
+          **Design:** ${{ env.VARIANT }}
+          **File:** \`${{ env.CORPUS_FILE }}\`
+
+          Closes #${{ github.event.issue.number }}" \
+            --base master \
+            --head "$BRANCH"
+
+      - name: Comment on issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh issue comment ${{ github.event.issue.number }} \
+            --body "✅ **Thank you for your contribution!**
+          
+          Your run data has been automatically processed and a Pull Request has been created to add it to the corpus.
+          
+          Once merged, the predictor will learn from your data and become more accurate for everyone. 🎉"
