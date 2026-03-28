@@ -28,8 +28,24 @@ def now_iso() -> str:
 
 
 def find_metric_files(run_dir: str) -> dict:
-    """Auto-detect and extract metrics from an OpenLane run directory."""
+    """Auto-detect and extract metrics from an OpenLane or ORFS run directory."""
     metrics = {}
+
+    # --- ORFS Flow Detection ---
+    orfs_metrics = os.path.join(run_dir, "reports", "metrics.json")
+    if os.path.exists(orfs_metrics):
+        try:
+            with open(orfs_metrics, "r", encoding="utf-8") as f:
+                d = json.load(f)
+            if "route__wirelength__estimated" in d: metrics["hpwlUm"] = float(d["route__wirelength__estimated"])
+            if "timing__setup__ws" in d: metrics["setupWnsNs"] = float(d["timing__setup__ws"])
+            if "timing__setup__vio" in d: metrics["setupViolations"] = int(d["timing__setup__vio"])
+            if "timing__hold__vio" in d: metrics["holdViolations"] = int(d["timing__hold__vio"])
+            if "design__violations" in d: metrics["antennaViolations"] = int(d["design__violations"])
+            if "cts__clock__wirelength" in d: metrics["averageSinkWireLengthUm"] = float(d["cts__clock__wirelength"])
+            if metrics: return metrics
+        except Exception:
+            pass
 
     # --- HPWL: from placement logs or final summary ---
     for csv_name in ["metrics.csv", "final_summary_report.csv"]:

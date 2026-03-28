@@ -3,6 +3,7 @@
 **The open-source toolkit for smarter OpenLane runs — check before, during, and after.**
 
 > Stop wasting 30 minutes on runs that were doomed from the start.
+> **🔥 NEW:** Now natively supports parsing **ORFS (OpenROAD Flow Scripts)** alongside OpenLane!
 
 [![License: Dual](https://img.shields.io/badge/License-Dual%20(Academic%20Free%20%2F%20Commercial%20Licensed)-blue)](#license)
 
